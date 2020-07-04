@@ -5,8 +5,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Models\" />
-    <Folder Include="DAL\" />
+    <Compile Remove="DAL\**" />
+    <Compile Remove="Models\**" />
+    <Content Remove="DAL\**" />
+    <Content Remove="Models\**" />
+    <EmbeddedResource Remove="DAL\**" />
+    <EmbeddedResource Remove="Models\**" />
+    <None Remove="DAL\**" />
+    <None Remove="Models\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -15,6 +21,16 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Semestre 2-2020\Programacion aplicada 2\Tareas\Tarea3\ProyectoPrestamo\ProyectoPrestamo.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="DATA\Prestamos.db">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 
