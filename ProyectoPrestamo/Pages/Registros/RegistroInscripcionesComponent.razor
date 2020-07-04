@@ -1,0 +1,201 @@
+﻿@page "/RegistroPrestamos"
+
+@using ProyectoPrestamo.Models;
+@using ProyectoPrestamo.BLL;
+@inject IToastService toast
+
+<EditForm Model="prestamos" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <div class="card">
+        <div class="card-header">
+            <h3>Registro prestamos</h3>
+            <a style="float:right; margin-top: -48px; height: 40px;" class="btn btn-primary" href="ConsultaPrestamos">Consultar prestamos</a>
+        </div>
+
+        <div class="card-body">
+            <form>
+                @*PrestamoId*@
+                <div class="form-row align-items-center">
+                    <div class="col">
+                        <div class="form-group">
+                            <label>PretamoId</label>
+                            <div class="input-group">
+                                <InputNumber @bind-Value="prestamos.PrestamoId" class="form-control col-4" />
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-primary input-group-text" @onclick="Buscar">
+                                        <span class="oi oi-zoom-in"></span> Buscar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @*Concepto*@
+                <div class="form-group">
+                    <label for="ConceptTextBox">Concepto</label>
+                    <InputText @bind-Value="prestamos.Concepto" class="form-control" id="ConceptTextBox" />
+                    <ValidationMessage For="@(() => prestamos.Concepto)" />
+                    <small id="NameInLineHelper" class="text-muted">
+                        Ingrese el concepto del prestamo
+                    </small>
+                </div>
+
+                @*PersonaId*@
+                <div class="form-group" style="border-top: 1px solid;">
+                    <label>Persona</label>
+                    <SfComboBox TItem="Personas" TValue="int" DataSource="lista" @bind-Value="prestamos.PersonaID">
+                        <ComboBoxFieldSettings Text="Nombre" Value="PersonaId">
+                        </ComboBoxFieldSettings>
+                    </SfComboBox>
+                    <small id="PersonaIdInlineHelper" class="text-muted">Seleccione la persona</small>
+                    
+                    @*<div class="col">
+                         <div class="form-group">
+                             <label for="PersonIdSelector">personaId</label>
+                             <div class="input-group">
+                                 <InputNumber @bind-Value="prestamos.PersonaID" class="form-control col-4" id="PersonIdSelector" />
+                             </div>
+                         </div>
+                     </div>*@
+                </div>
+
+                @*Fecha*@
+                <div class="form-group">
+                    <label for="LoanDatePicker">Fecha </label>
+                    <InputDate @bind-Value="prestamos.Fecha" class="form-control" id="LoanDatePicker" />
+                    <ValidationMessage For="@(() => prestamos.Fecha)" />
+                    <small id="LoanDateInLineHelper" class="text-muted">
+                        Ingresar la fecha del prestamo
+                    </small>
+                </div>
+
+                @*Monto*@
+                <div class="form-group">
+                    <label for="AmountTextBox">Monto</label>
+                    <InputNumber @bind-Value="prestamos.Monto" class="form-control" id="AmountTextBox" />
+                    <ValidationMessage For="@(() => prestamos.Monto)" />
+                    <small id="AmountineHelper" class="text-muted">
+                        Monto del prestamo
+                    </small>
+                </div>
+
+                @*Balance*@
+                <div class="form-group">
+                    <label for="BalanceTextBox">Balance</label>
+                    <input type="number" @bind="prestamos.Balance" class="form-control" id="BalanceTextBox" readonly />
+                    <ValidationMessage For="@(() => prestamos.Balance)" />
+                    <small id="BalanceLineHelper" class="text-muted"> Balance del prestamo </small>
+                </div>
+
+                @*Deposito*@
+                <div class="form-group">
+                    <label>Deposito</label>
+                    <input @bind="Deposito" class="form-control" />
+                    <small id="DepositLineHelper" class="text-muted"> Deposito al prestamo </small>
+                </div>
+
+            </form>
+        </div>
+
+        @*Buttons*@
+        <div class="card-footer">
+            <div class="form-group text-center" display: inline-block>
+
+                <button type="button" class="btn btn-lg btn-primary" @onclick="Nuevo">
+                    <span class="oi oi-plus"></span> Nuevo
+                </button>
+
+                <button type="submit" class="btn btn-lg btn-success">
+                    <span class="oi oi-clipboard" aria-hidden="true"></span> Guardar
+                </button>
+
+                <button type="button" class="btn btn-lg btn-danger" @onclick="Eliminar">
+                    <span class="oi oi-trash"></span>   Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+
+    Prestamos prestamos = new Prestamos();
+    List<Personas> lista = new List<Personas>();
+
+    private decimal Deposito;
+
+    protected override void OnInitialized()
+    {
+        Nuevo();
+        Buscar();
+        Deposito = 0;
+        lista = PersonasBLL.GetList(x => true);
+    }
+
+    private void Nuevo()
+    {
+        prestamos = new Prestamos();
+        Deposito = 0;
+
+
+    }
+
+    private void Buscar()
+    {
+        if (prestamos.PrestamoId > 0)
+        {
+            var encontrado = PrestamosBLL.Buscar(prestamos.PrestamoId);
+            if (encontrado != null)
+                this.prestamos = encontrado;
+            else
+                toast.ShowWarning("No encontado");
+        }
+    }
+
+    private void Guardar()
+    {
+        bool guardo;
+        VerificarBalanceInicial();
+        guardo = PrestamosBLL.Guardar(prestamos);
+
+        PrestamosBLL.LlenarBalance(prestamos.PersonaID, prestamos.Balance);
+
+        if (guardo)
+        {
+            Nuevo();
+            toast.ShowSuccess("Guardado correctamente");
+        }
+    }
+
+    private void VerificarBalanceInicial()
+    {
+        if (prestamos.Balance == 0)
+        {
+            prestamos.Balance = prestamos.Monto;
+        }
+        else if (prestamos.Balance > 0)
+        {
+            prestamos.Balance = prestamos.Balance - Deposito;
+        }
+        else if (prestamos.Balance < 0)
+        {
+            prestamos.Balance = 0;
+        }
+    }
+
+    private void Eliminar()
+    {
+        bool elimino;
+
+        elimino = PrestamosBLL.Eliminar(prestamos.PrestamoId);
+        PrestamosBLL.RemoverPrestamo(prestamos.PersonaID);
+
+        if (elimino)
+        {
+            Nuevo();
+            toast.ShowSuccess("Eliminado correctamente");
+        }
+    }
+
+}
